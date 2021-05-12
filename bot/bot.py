@@ -377,12 +377,12 @@ async def calculate(ctx, stockID: str, numberStocks: int):
         await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\"")
     else:
         cost = stockValue * numberStocks
-        await ctx.send("The value of " + str(numberStocks) + " of " + stockID + " would be **$" + cost + "**")
+        await ctx.send("The value of " + str(numberStocks) + " of " + stockID + " would be **$" + str(cost) + "**")
 
 @bot.command(aliases=["p"])
 async def portfolio(ctx):
     user = ctx.message.author.id
-    name = user.name
+    name = ctx.message.author.name
     userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
     portfolioMessage = "```" + name + "'s Portfolio:"
     stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
@@ -466,6 +466,7 @@ async def sell(ctx, stockID: str, numberStocks: int):
 
 @bot.command()
 async def unlock(ctx, stockID: str):
+    lowercaseID = stockID.lower()
     user = ctx.message.author.id
     accessText = '''SELECT ''' + lowercaseID + '''_unlocked FROM portfolios WHERE uid = $1;'''
     userAccess = await db.fetchval(accessText,user)
