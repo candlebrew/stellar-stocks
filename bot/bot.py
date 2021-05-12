@@ -300,8 +300,9 @@ async def on_ready():
 async def stocks_task():
     await asyncio.sleep(10)
     while True:
+        logMessage = ""
         stocksChannel = bot.get_channel(stockChannelID)
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now()
         storedHour = await db.fetchval('''SELECT hour FROM time_master WHERE id = '00MASTER00';''')
         if now.hour > storedHour:
             stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
