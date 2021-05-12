@@ -658,6 +658,14 @@ async def new_day(ctx):
 async def delete(ctx):
     pass
 
+@dev.group()
+async def quick_fix(ctx):
+    await db.execute('''ALTER TABLE portfolios RENAME COLUMN hfe_unlocked TO hle_unlocked;''')
+    await db.execute('''ALTER TABLE portfolios RENAME COLUMN hfe_stocks TO hle_stocks;''')
+    await db.execute('''ALTER TABLE portfolios RENAME COLUMN lle_unlocked TO lfe_unlocked;''')
+    await db.execute('''ALTER TABLE portfolios RENAME COLUMN lle_stocks TO lfe_stocks;''')
+    await ctx.send("Fix completed.")
+
 #@delete.command()
 #@is_dev()
 #async def table_reset(ctx):
