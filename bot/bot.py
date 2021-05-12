@@ -507,7 +507,7 @@ async def species(ctx):
 async def set(ctx, species: str):
     userID = ctx.message.author.id
     species = species.lower()
-    currentSpecies = db.fetchval('''SELECT species FROM players WHERE uid = $1;''',userID)
+    currentSpecies = await db.fetchval('''SELECT species FROM players WHERE uid = $1;''',userID)
     if species not in ["krawzird","human","phomaek","hvellen","halosynth","illiet","elovias","spacemun","retega"]:
         await ctx.send("Please select a valid species.")
     elif currentSpecies != None:
