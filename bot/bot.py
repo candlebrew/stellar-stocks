@@ -499,6 +499,67 @@ async def unlock(ctx, stockID: str):
         await db.execute(updateStocksText,user)
         await ctx.send("Congratulations! You now have access to " + stockID)
     
+@bot.group(invoke_without_command=True)
+async def species(ctx):
+    await ctx.send("You can be the following species: *Krawzird, Human, Phomaek, Hvellen, Halosynth, Illiet, Elovias, Spacemun, or Retega*\n(WIP: a list of abilities will come soon!)")
+    
+@species.command()
+async def set(ctx, species: str):
+    userID = ctx.message.author.id
+    species = species.lower()
+    currentSpecies = db.fetchval('''SELECT species FROM players WHERE uid = $1;''',userID)
+    if species not in ["krawzird","human","phomaek","hvellen","halosynth","illiet","elovias","spacemun","retega"]:
+        await ctx.send("Please select a valid species.")
+    elif currentSpecies != None:
+        await ctx.send("You already have a species selected.")
+    else:
+        species = species.capitalize()
+        await db.execute('''UPDATE players SET species = $1 WHERE uid = $2;''',species,userID)
+        if species == "Krawzird":
+            stock = "kfe"
+            aan = "a "
+        elif species == "Human":
+            stock = "ecce"
+            aan = "a "
+        elif species == "Phomaek":
+            stock = "cwe"
+            aan = "a "
+        elif species == "Hvellen":
+            stock = "dfe"
+            aan = "a "
+        elif species == "Halosynth":
+            stock = "hle"
+            aan = "a "
+        elif species == "Illiet":
+            stock = "ife"
+            aan = "an "
+        elif species == "Elovias":
+            stock = "lfe"
+            aan = "an "
+        elif species == "Spacemun":
+            stock = "mme"
+            aan = "a "
+        elif species == "Retega":
+            stock = "rfe"
+            aan = "a "
+        unlockText = '''UPDATE portfolios SET ''' + stock + '''_unlocked = True WHERE uid = $1;'''
+        await db.execute(unlockText,userID)
+        stocksText = '''UPDATE portfolios SET ''' + stock + '''_stocks = 5 WHERE uid = $1;'''
+        await db.execute(stocksText,userID)
+        await db.execute('''UPDATE portfolios SET money = 100000 WHERE uid = $1;''',userID)
+        await ctx.send("Congratulations! You are now " + aan + species + " and ready to buy stocks!")
+
+@bot.command()
+async def start(ctx):
+    userID = ctx.message.author.id
+    currentUser = await db.fetchval('''SELECT uid FROM players WHERE uid = $1;''',userID)
+    if currentUser != None:
+        await ctx.send("You are already registered!")
+    else:
+        await db.execute('''INSERT INTO players (uid) VALUES ($1);''',uid)
+        await db.execute('''INSERT INTO portfolios (uid, money) VALUES ($1,0);''')
+        await ctx.send("You are signed up with the Stellar Stocks trading network. Please use `ss.species` to view the list of species, then use `ss.species set <species>` to set the species you are.")
+    
 
 ## Dev Commands ------------------------------------------------------
 @bot.group()
