@@ -387,7 +387,7 @@ async def portfolio(ctx):
     portfolioMessage = "```" + name + "'s Portfolio:"
     stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
     for stockID in stocksList:
-        await ctx.send(lowerID)
+        await ctx.send(stockID)
         lowerID = stockID.lower()
         await ctx.send(lowerID)
         try:
