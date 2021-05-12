@@ -269,8 +269,9 @@ async def stock(ctx, stockID: str, slowGrow: int, fastGrow: int, slowDecay: int,
     phaseWeights.append(chaoticDecay)
     phaseWeights.append(chaoticStable)
     phaseWeights.append(chaos)
-    startPhase = random.choices(stockPhases, weights=phaseWeights,k=1)[1]
+    startPhase = random.choices(stockPhases, weights=phaseWeights,k=1)[0]
     await db.execute('''INSERT INTO stocks VALUES ($1,$2,10000,$3,$4);''',stockID,stockName,startPhase,phaseWeights)
+    await ctx.send("Added " + stockName + " (" + stockID + ") to database successfully.")
 
 @test.command()
 @is_dev()
