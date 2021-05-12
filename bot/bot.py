@@ -260,7 +260,9 @@ async def run():
 #TODO token id
 token = os.environ.get('DISCORD_BOT_TOKEN')
 devID = int(os.environ.get('DEV_ID'))
+stockPrices = int(os.environ.get('STOCK_PRICES_MESSAGE'))
 stockChannelID = int(os.environ.get('STOCK_LOGS_CHANNEL'))
+pricesChannelID = int(os.environ.get('STOCK_PRICES_CHANNEL'))
 client = discord.Client()
 
 bot = commands.Bot(command_prefix='ss.', db=db)
@@ -301,7 +303,9 @@ async def stocks_task():
     await asyncio.sleep(10)
     while True:
         logMessage = ""
+        channelMessage = ""
         stocksChannel = bot.get_channel(stockChannelID)
+        pricesChannel = bot.get_channel(pricesChannelID)
         now = datetime.datetime.now()
         storedHour = await db.fetchval('''SELECT hour FROM time_master WHERE id = '00MASTER00';''')
         if now.hour > storedHour:
@@ -355,8 +359,11 @@ async def stocks_task():
                     newValue = 1
                 await db.execute('''UPDATE stocks SET value = $1 WHERE id = $2;''',newValue,stockID)
                 logMessage += stockID + " " + str(currentStockValue) + " >>> " + str(newValue) + "\n"
+                channelMessage += stockID + ": " + str(newValue) + "\n"
             await db.execute('''UPDATE time_master SET hour = $1 WHERE id = '00MASTER00';''',now.hour)
             await stocksChannel.send(logMessage)
+            pricesMessage = await pricesChannel.fetch_message(stockPrices)
+            await pricesMessage.edit(content=channelMessage)
         await asyncio.sleep(30)
 
 
@@ -390,30 +397,55 @@ async def new(ctx):
 @new.command()
 @is_dev()
 async def stock(ctx, stockID: str, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int, *, stockName: str):
-    phaseWeights = []
-    phaseWeights.append(slowGrow)
-    phaseWeights.append(fastGrow)
-    phaseWeights.append(slowDecay)
-    phaseWeights.append(fastDecay)
-    phaseWeights.append(stable)
-    phaseWeights.append(chaoticGrow)
-    phaseWeights.append(chaoticDecay)
-    phaseWeights.append(chaoticStable)
-    phaseWeights.append(chaos)
-    startPhase = random.choices(stockPhases, weights=phaseWeights,k=1)[0]
-    await db.execute('''INSERT INTO stocks VALUES ($1,$2,10000,$3,$4);''',stockID,stockName,startPhase,phaseWeights)
-    lowerCaseID = stockID.lower()
-    playersText = '''ALTER TABLE players ADD COLUMN e_''' + lowerCaseID + ''' BOOL DEFAULT false;'''
-    portfoliosUnlockText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_unlocked BOOL DEFAULT false;'''
-    portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
-    devPlayersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
-    devPortfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked true WHERE uid = ''' + str(devID) + ''';'''
-    await db.execute(playersText)
-    await db.execute(portfoliosUnlockText)
-    await db.execute(portfoliosStocksText)
-    await db.execute(devPlayersText)
-    await db.execute(devPortfoliosText)
-    await ctx.send("Added " + stockName + " (" + stockID + ") to database successfully.")   
+    stockList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
+    if stockID in stockList:
+        await ctx.send("That stock ID already exists.")
+    else:
+        phaseWeights = []
+        phaseWeights.append(slowGrow)
+        phaseWeights.append(fastGrow)
+        phaseWeights.append(slowDecay)
+        phaseWeights.append(fastDecay)
+        phaseWeights.append(stable)
+        phaseWeights.append(chaoticGrow)
+        phaseWeights.append(chaoticDecay)
+        phaseWeights.append(chaoticStable)
+        phaseWeights.append(chaos)
+        startPhase = random.choices(stockPhases, weights=phaseWeights,k=1)[0]
+        if startPhase == "slow growth":
+            patternWeights = [0,0,50,50,0,0,0]
+        elif startPhase == "fast growth":
+            patternWeights = [20,30,35,15,0,0,0]
+        elif startPhase == "slow decay":
+            patternWeights = [0,0,0,50,50,0,0]
+        elif startPhase == "fast decay":
+            patternWeights = [0,0,0,15,35,30,20]
+        elif startPhase == "chaotic growth":
+            patternWeights = [20,20,20,20,20,0,0]
+        elif startPhase == "chaotic decay":
+            patternWeights = [0,0,20,20,20,20,20]
+        elif startPhase == "stable":
+            patternWeights = [0,0,33,34,33,0,0]
+        elif startPhase == "chaotic stable":
+            patternWeights = [0,20,20,20,20,20,0]
+        elif startPhase == "true chaos":
+            patternWeights = [15,15,15,10,15,15,15]
+        pattern = random.choices(stockPatterns, weights=patternWeights,k=1)[0]
+        await db.execute('''INSERT INTO stocks VALUES ($1,$2,10000,$3,$4,$5);''',stockID,stockName,startPhase,phaseWeights,pattern)
+        lowerCaseID = stockID.lower()
+        playersText = '''ALTER TABLE players ADD COLUMN e_''' + lowerCaseID + ''' BOOL DEFAULT false;'''
+        portfoliosUnlockText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_unlocked BOOL DEFAULT false;'''
+        portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
+        devPlayersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
+        devPortfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked true WHERE uid = ''' + str(devID) + ''';'''
+        await db.execute(playersText)
+        await db.execute(portfoliosUnlockText)
+        await db.execute(portfoliosStocksText)
+        await db.execute(devPlayersText)
+        await db.execute(devPortfoliosText)
+        stockList.append(stockID)
+        await db.execute('''UPDATE time_master SET stocks = $1 WHERE id = '00MASTER00';''',stockList)
+        await ctx.send("Added " + stockName + " (" + stockID + ") to database successfully.")   
 
 @test.command()
 @is_dev()
@@ -440,6 +472,10 @@ async def stockname(ctx, stockID: str, *, newName: str):
 @is_dev()
 async def stockID(ctx, stockID: str, newID: str):
     await db.execute('''UPDATE stocks SET id = $1 WHERE id = $2;''',newID,stockID)
+    stockList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
+    stockList.remove(stockID)
+    stockList.append(newID)
+    await db.execute('''UPDATE time_master SET stocks = $1 WHERE id = '00MASTER00';''',stockList)
     await ctx.send(stockID + " has been set to " + newID)
     
 @set.command()
