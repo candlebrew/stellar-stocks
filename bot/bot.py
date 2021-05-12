@@ -171,8 +171,12 @@ newsSetupSQL = '''
         effect TEXT,
         stock TEXT
         );'''
-stocksMasterSQL = '''
-    INSERT INTO stocks (id,value,phase_weights) VALUES ('00MASTER00',$1,$2);'''
+timeMasterSQL = '''
+    CREATE TABLE IF NOT EXISTS time_master (
+        id TEXT,
+        hour INT,
+        stocks TEXT[]
+        );'''
 
 ## Connecting the DB ----------------------------------------------------------
 # TODO db loop
@@ -186,6 +190,7 @@ async def run():
     await db.execute(stocksSetupSQL)
     await db.execute(portfoliosSetupSQL)
     await db.execute(newsSetupSQL)
+    await db.execute(timeMasterSQL)
 
     emptyList = []
     checkDev = await db.fetchval('''
@@ -198,8 +203,8 @@ async def run():
     if checkDevPortfolio is None:
         await db.execute('''
         INSERT INTO portfolios VALUES ($1,1000000000,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)''',devID)
-    checkMasterStocks = await db.fetchval('''SELECT id FROM stocks WHERE id = '00MASTER00';''')
-    if checkMasterStocks is None:
+    checkTimeMaster = await db.fetchval('''SELECT id FROM time_master WHERE id = '00MASTER00';''')
+    if checkTimeMaster is None:
         currentStocks = [
             "KF.E",
             "ECC.E",
@@ -250,7 +255,7 @@ async def run():
             "DWYN"
             ]
         now = datetime.datetime.now()
-        await db.execute(stocksMasterSQL,now.hour,currentStocks)
+        await db.execute('''INSERT INTO time_master VALUES ('00MASTER00',$1,$2);''',now.hour,currentStocks)
 
 ## Bot Setup ----------------------------------------------------------
 #TODO token id
@@ -297,9 +302,62 @@ async def stocks_task():
     await asyncio.sleep(10)
     while True:
         stocksChannel = bot.get_channel(stockChannelID)
-        now = datetime.datetime.now()
-        if now.minute == 0:
-            
+        now = datetime.datetime.now(datetime.timezone.utc)
+        storedHour = await db.fetchval('''SELECT hour FROM time_master WHERE id = '00MASTER00';''')
+        storedDay = await db.fetchval('''SELECT day FROM time_master WHERE id = '00MASTER00';''')
+        if now.hour > storedHour:
+            stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
+            for stockID in stocksList:
+                if now.hour == 5:
+                    phase = await db.fetchval('''SELECT phase FROM stocks WHERE id = $1;''',stockID)
+                    if phase == "slow growth":
+                        patternWeights = [0,0,50,50,0,0,0]
+                    elif phase == "fast growth":
+                        patternWeights = [20,30,35,15,0,0,0]
+                    elif phase == "slow decay":
+                        patternWeights = [0,0,0,50,50,0,0]
+                    elif phase == "fast decay":
+                        patternWeights = [0,0,0,15,35,30,20]
+                    elif phase == "chaotic growth":
+                        patternWeights = [20,20,20,20,20,0,0]
+                    elif phase == "chaotic decay":
+                        patternWeights = [0,0,20,20,20,20,20]
+                    elif phase == "stable":
+                        patternWeights = [0,0,33,34,33,0,0]
+                    elif phase == "chaotic stable":
+                        patternWeights = [0,20,20,20,20,20,0]
+                    elif phase == "true chaos":
+                        patternWeights = [15,15,15,10,15,15,15]
+                    pattern = random.choices(stockPatterns, weights=patternWeights,k=1)[0]
+                    await db.execute('''UPDATE stocks SET pattern = $1 WHERE id = $2;''',pattern,stockID)
+                currentPattern = await db.fetchval('''SELECT pattern FROM stocks WHERE id = $1;''',stockID)
+                if currentPattern in ["huge increase","huge decrease"]:
+                    changeMin = 1000
+                    changeMax = 10000
+                elif currentPattern in ["big increase","big decrease"]:
+                    changeMin = 500
+                    changeMax = 1000
+                elif currentPattern in ["small increase","small decrease"]:
+                    changeMin = 100
+                    changeMax = 500
+                elif currentPattern == "no change":
+                    changeMin = 0
+                    changeMax = 200
+                changeValue = random.randint(changeMin, changeMax)
+                if currentPattern in ["huge decrease","big decrease","small decrease"]:
+                    changeValue *= -1
+                elif currentPattern == "no change":
+                    if changeValue > 100:
+                        changeValue -= 100
+                        changeValue *= -1
+                currentStockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
+                newValue = currentStockValue + changeValue
+                if newValue <= 0:
+                    newValue = 1
+                await db.execute('''UPDATE stocks SET value = $1 WHERE id = $2;''',newValue,stockID)
+                logMessage += stockID + " " + str(currentStockValue) + " >>> " + str(newValue) + "\n"
+            await db.execute('''UPDATE time_master SET hour = $1 WHERE id = '00MASTER00';''',now.hour)
+            await stocksChannel.send(logMessage)
         await asyncio.sleep(30)
 
 
@@ -408,6 +466,39 @@ async def add_stock_fix(ctx):
 #    await ctx.send("All done!")
     pass
     
+@set.command()
+@is_dev()
+async def stock_patterns_fix(ctx):
+    await db.execute('''ALTER TABLE stocks ADD COLUMN pattern;''')
+    await ctx.send("Fix complete.")
+    
+@set.command()
+@is_dev()
+async def new_day(ctx):
+    stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
+    for stockID in stocksList:
+        phase = await db.fetchval('''SELECT phase FROM stocks WHERE id = $1;''',stockID)
+        if phase == "slow growth":
+            patternWeights = [0,0,50,50,0,0,0]
+        elif phase == "fast growth":
+            patternWeights = [20,30,35,15,0,0,0]
+        elif phase == "slow decay":
+            patternWeights = [0,0,0,50,50,0,0]
+        elif phase == "fast decay":
+            patternWeights = [0,0,0,15,35,30,20]
+        elif phase == "chaotic growth":
+            patternWeights = [20,20,20,20,20,0,0]
+        elif phase == "chaotic decay":
+            patternWeights = [0,0,20,20,20,20,20]
+        elif phase == "stable":
+            patternWeights = [0,0,33,34,33,0,0]
+        elif phase == "chaotic stable":
+            patternWeights = [0,20,20,20,20,20,0]
+        elif phase == "true chaos":
+            patternWeights = [15,15,15,10,15,15,15]
+        pattern = random.choices(stockPatterns, weights=patternWeights,k=1)[0]
+        await db.execute('''UPDATE stocks SET pattern = $1 WHERE id = $2;''',pattern,stockID)
+    await ctx.send("Task complete.")
     
 @dev.group()
 async def delete(ctx):
