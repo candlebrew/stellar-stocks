@@ -325,7 +325,10 @@ async def add_stock_fix(ctx):
             await db.execute(portfoliosUnlockText)
         except:
             pass
-        await db.execute(portfoliosStocksText)
+        try:
+            await db.execute(portfoliosStocksText)
+        except:
+            pass
         await db.execute(portfoliosText)
     await ctx.send("All done!")
     
