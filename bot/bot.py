@@ -393,14 +393,11 @@ async def portfolio(ctx):
             lowerID = lowerID.replace(".", "")
         except:
             pass
-        portfolioMessage += "\n**"
         stockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',stockID)
-        portfolioMessage += stockName
-        portfolioMessage += " [" + stockID + "]:** "
         accessText = "SELECT " + lowerID + "_unlocked FROM portfolios WHERE uid = $1;"
         userAccess = await db.fetchval(accessText,user)
         if userAccess == False:
-            portfolioMessage += "LOCKED"
+            pass
         else:
             stocksText = '''SELECT ''' + lowerID + '''_stocks FROM portfolios WHERE uid = $1;'''
             userStocks = await db.fetchval(stocksText,user)
@@ -408,10 +405,16 @@ async def portfolio(ctx):
             if userStocks is None:
                 userStocks = 0
             valueOwned = userStocks * stockValue
-            portfolioMessage += "$" + str(valueOwned) + " | "
-            portfolioMessage += str(userStocks)
-        stockCounter += 1
-        if stockCounter >= 10:
+            if userStocks == 0:
+                pass
+            else:
+                portfolioMessage += "\n**"
+                portfolioMessage += stockName
+                portfolioMessage += " [" + stockID + "]:** "
+                portfolioMessage += "$" + str(valueOwned) + " | "
+                portfolioMessage += str(userStocks)
+                stockCounter += 1
+        if stockCounter >= 20:
             await ctx.send(portfolioMessage)
             portfolioMessage = ""
             stockCounter = 0
