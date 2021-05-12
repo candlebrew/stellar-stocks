@@ -374,7 +374,7 @@ async def stocks_task():
 async def calculate(ctx, stockID: str, numberStocks: int):
     stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
     if stockValue is None:
-        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\"")
     else:
         cost = stockValue * numberStocks
         await ctx.send("The value of " + str(numberStocks) + " of " + stockID + " would be **$" + cost + "**")
@@ -405,9 +405,7 @@ async def portfolio(ctx):
             portfolioMessage += " ($" + str(valueOwned) + ")"
     portfolioMessage += "```"
     await ctx.send(portfolioMessage)
-            
-            
-    
+
 @bot.command(aliases=["prices"])
 async def stocks(ctx):
     pricesChannel = bot.get_channel(pricesChannelID)
@@ -425,7 +423,7 @@ async def buy(ctx, stockID: str, numberStocks: int):
     stocksText = '''SELECT ''' + lowercaseID + '''_stocks FROM portfolios WHERE uid = $1;'''
     userStocks = await db.fetchval(stocksText,user)
     if stockValue is None:
-        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\"")
     elif userAccess == False:
         await ctx.send("Sorry, you do not have access to " + stockID + ". Purchase access with `ss.unlock " + stockID + "` for $10,000.")
     else:
@@ -451,7 +449,7 @@ async def sell(ctx, stockID: str, numberStocks: int):
     stocksText = '''SELECT ''' + lowercaseID + '''_stocks FROM portfolios WHERE uid = $1;'''
     userStocks = await db.fetchval(stocksText,user)
     if stockValue is None:
-        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\"")
     elif userAccess == False:
         await ctx.send("Sorry, you do not have access to " + stockID + ". Purchase access with `ss.unlock " + stockID + "` for $10,000.")
     else:
@@ -474,7 +472,7 @@ async def unlock(ctx, stockID: str):
     userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
     stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
     if stockValue is None:
-        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\"")
     elif userAccess == True:
         await ctx.send("You already have access to " + stockID)
     elif userMoney < 10000:
