@@ -361,6 +361,7 @@ async def stocks_task():
                 logMessage += stockID + " " + str(currentStockValue) + " >>> " + str(newValue) + "\n"
                 channelMessage += stockID + ": " + str(newValue) + "\n"
             await db.execute('''UPDATE time_master SET hour = $1 WHERE id = '00MASTER00';''',now.hour)
+            logMessage = "``` ```" + logMessage
             await stocksChannel.send(logMessage)
             channelMessage = "```" + channelMessage + "```"
             pricesMessage = await pricesChannel.fetch_message(stockPrices)
