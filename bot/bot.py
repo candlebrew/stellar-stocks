@@ -197,9 +197,8 @@ async def run():
 
 ## Bot Setup ----------------------------------------------------------
 #TODO token id
-# token = os.environ.get('DISCORD_BOT_TOKEN')
+token = os.environ.get('DISCORD_BOT_TOKEN')
 devID = int(os.environ.get('DEV_ID'))
-token = 'ODQxMDMyNTgzNjg4ODgwMTM4.YJg2oQ.IB1JUhgjDGrnbwV_NjzAl9WkH_4'
 client = discord.Client()
 
 bot = commands.Bot(command_prefix='ss.', db=db)
@@ -264,10 +263,21 @@ async def stock(ctx):
 
 @test.command()
 @is_dev()
-async def list(ctx, listInput: list):
-    await ctx.send(listInput)
-    await ctx.send(str(listInput))
-    await ctx.send(type(listInput))
+async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int):
+    phaseWeights = []
+    phaseWeights.append(slowGrow)
+    phaseWeights.append(fastGrow)
+    phaseWeights.append(slowDecay)
+    phaseWeights.append(fastDecay)
+    phaseWeights.append(stable)
+    phaseWeights.append(chaoticGrow)
+    phaseWeights.append(chaoticDecay)
+    phaseWeights.append(chaoticStable)
+    phaseWeights.append(chaos)
+
+    await ctx.send(phaseWeights)
+    await ctx.send(str(phaseWeights))
+    await ctx.send(type(phaseWeights))
 
 
 ## Bot Setup & Activation ----------------------------------------------------------
