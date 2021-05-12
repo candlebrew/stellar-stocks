@@ -287,6 +287,18 @@ async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int
     phaseWeights.append(chaoticStable)
     phaseWeights.append(chaos)
 
+@set.command()
+@is_dev()
+async def stockname(ctx, stockID: str, newName: str):
+    await db.execute('''UPDATE stocks SET name = $1 WHERE id = $2;''',newName,stockID)
+    await ctx.send(stockID + " has been set to " + newName)
+    
+@set.command()
+@is_dev()
+async def stockID(ctx, stockID: str, newID: str):
+    await db.execute('''UPDATE stocks SET id = $1 WHERE id = $2;''',newID,stockID)
+    await ctx.send(stockID + " has been set to " + newID)
+    
 
 ## Bot Setup & Activation ----------------------------------------------------------
 asyncio.get_event_loop().run_until_complete(run())
