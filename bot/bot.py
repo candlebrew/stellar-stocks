@@ -405,6 +405,8 @@ async def portfolio(ctx):
             userStocks = await db.fetchval(stocksText,user)
             portfolioMessage += str(userStocks)
             stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',lowerID)
+            if userStocks is None:
+                userStocks = 0
             valueOwned = userStocks * stockValue
             portfolioMessage += " ($" + str(valueOwned) + ")"
     portfolioMessage += "```"
