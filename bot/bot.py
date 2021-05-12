@@ -319,7 +319,7 @@ async def add_stock_fix(ctx):
         playersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
         portfoliosUnlockText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_unlocked BOOL DEFAULT false;'''
         portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
-        portfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked true WHERE uid = ''' + str(devID) + ''';'''
+        portfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked = true WHERE uid = ''' + str(devID) + ''';'''
         await db.execute(playersText)
         await db.execute(portfoliosUnlockText)
         await db.execute(portfoliosStocksText)
