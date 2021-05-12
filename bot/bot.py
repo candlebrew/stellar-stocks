@@ -389,7 +389,7 @@ async def portfolio(ctx):
     for stockID in stocksList:
         lowerID = stockID.lower()
         portfolioMessage += "\n"
-        stockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',lowerID)
+        stockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',stockID)
         portfolioMessage += stockName
         portfolioMessage += "[" + stockID + "]: "
         accessText = '''SELECT ''' + lowerID + '''_unlocked FROM portfolios WHERE uid = $1;'''
