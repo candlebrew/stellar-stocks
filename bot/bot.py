@@ -467,7 +467,7 @@ async def add_stock_fix(ctx):
 @set.command()
 @is_dev()
 async def stock_patterns_fix(ctx):
-    await db.execute('''ALTER TABLE stocks ADD COLUMN pattern;''')
+    await db.execute('''ALTER TABLE stocks ADD COLUMN pattern TEXT;''')
     await ctx.send("Fix complete.")
     
 @set.command()
