@@ -386,6 +386,7 @@ async def portfolio(ctx):
     userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
     portfolioMessage = "__**" + name + "'s Portfolio:**__"
     stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
+    stockCounter = 1
     for stockID in stocksList:
         lowerID = stockID.lower()
         try:
@@ -409,7 +410,11 @@ async def portfolio(ctx):
             valueOwned = userStocks * stockValue
             portfolioMessage += "$" + str(valueOwned) + " | "
             portfolioMessage += str(userStocks)
-    portfolioMessage += "```"
+        stockCounter += 1
+        if stockCounter >= 10:
+            await ctx.send(portfolioMessage)
+            portfolioMessage = ""
+            stockCounter = 0
     await ctx.send(portfolioMessage)
 
 @bot.command(aliases=["prices"])
@@ -435,14 +440,14 @@ async def buy(ctx, stockID: str, numberStocks: int):
     else:
         cost = stockValue * numberStocks
         if userMoney < cost:
-            await ctx.send("You cannot afford to purchase " + str(numberStocks) + " of " + stockID + " (value of " + str(cost) + ")")
+            await ctx.send("You cannot afford to purchase " + str(numberStocks) + " of " + stockID + " stocks (value of $" + str(cost) + ")")
         else:
             userMoney -= cost
             userStocks += numberStocks
             updateStocksText = '''UPDATE portfolios SET ''' + stockID + '''_stocks = $1 WHERE uid = $2'''
             await db.execute(updateStocksText,userStocks,user)
             await db.execute('''UPDATE portfolios SET money = $1 WHERE uid = $2''',userMoney,user)
-            await ctx.send("You have purchased " + str(numberStocks) + " for $" + str(cost) + ". \nCurrent money: " + str(userMoney) + "\nCurrent number of " + stockID + " stocks: " + str(userStocks))
+            await ctx.send("You have purchased " + str(numberStocks) + " for $" + str(cost) + ". \nCurrent money: $" + str(userMoney) + "\nCurrent number of " + stockID + " stocks: " + str(userStocks))
         
 @bot.command(aliases=["s"])
 async def sell(ctx, stockID: str, numberStocks: int):
@@ -461,14 +466,14 @@ async def sell(ctx, stockID: str, numberStocks: int):
     else:
         cost = stockValue * numberStocks
         if userStocks < numberStocks:
-            await ctx.send("You do not have " + str(numberStocks) + " of " + stockID + " stocks. Current amount of stocks held: " + str(userStocks))
+            await ctx.send("You do not have " + str(numberStocks) + " " + stockID + " stocks. Current amount of stocks held: " + str(userStocks))
         else:
             userMoney += cost
             userStocks -= numberStocks
             updateStocksText = '''UPDATE portfolios SET ''' + stockID + '''_stocks = $1 WHERE uid = $2'''
             await db.execute(updateStocksText,userStocks,user)
             await db.execute('''UPDATE portfolios SET money = $1 WHERE uid = $2''',userMoney,user)
-            await ctx.send("You have sold " + str(numberStocks) + " for $" + str(cost) + ". \nCurrent money: " + str(userMoney) + "\nCurrent number of " + stockID + " stocks: " + str(userStocks))
+            await ctx.send("You have sold " + str(numberStocks) + " stocks for $" + str(cost) + ". \nCurrent money: $" + str(userMoney) + "\nCurrent number of " + stockID + " stocks: " + str(userStocks))
 
 @bot.command()
 async def unlock(ctx, stockID: str):
