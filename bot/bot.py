@@ -384,7 +384,7 @@ async def portfolio(ctx):
     user = ctx.message.author.id
     name = ctx.message.author.name
     userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
-    portfolioMessage = "```" + name + "'s Portfolio:"
+    portfolioMessage = "__**" + name + "'s Portfolio:**__"
     stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
     for stockID in stocksList:
         lowerID = stockID.lower()
@@ -392,10 +392,10 @@ async def portfolio(ctx):
             lowerID = lowerID.replace(".", "")
         except:
             pass
-        portfolioMessage += "\n"
+        portfolioMessage += "\n**"
         stockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',stockID)
         portfolioMessage += stockName
-        portfolioMessage += "[" + stockID + "]: "
+        portfolioMessage += " [" + stockID + "]:** "
         accessText = "SELECT " + lowerID + "_unlocked FROM portfolios WHERE uid = $1;"
         userAccess = await db.fetchval(accessText,user)
         if userAccess == False:
@@ -403,12 +403,12 @@ async def portfolio(ctx):
         else:
             stocksText = '''SELECT ''' + lowerID + '''_stocks FROM portfolios WHERE uid = $1;'''
             userStocks = await db.fetchval(stocksText,user)
-            portfolioMessage += str(userStocks)
             stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
             if userStocks is None:
                 userStocks = 0
             valueOwned = userStocks * stockValue
-            portfolioMessage += " ($" + str(valueOwned) + ")"
+            portfolioMessage += "$" + str(valueOwned) + " | "
+            portfolioMessage += str(userStocks)
     portfolioMessage += "```"
     await ctx.send(portfolioMessage)
 
