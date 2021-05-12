@@ -387,7 +387,9 @@ async def portfolio(ctx):
     portfolioMessage = "```" + name + "'s Portfolio:"
     stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
     for stockID in stocksList:
+        await ctx.send(lowerID)
         lowerID = stockID.lower()
+        await ctx.send(lowerID)
         try:
             lowerID = lowerID.replace(".", "")
         except:
@@ -405,9 +407,13 @@ async def portfolio(ctx):
             userStocks = await db.fetchval(stocksText,user)
             portfolioMessage += str(userStocks)
             stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',lowerID)
+            await ctx.send(str(userStocks))
+            await ctx.send(str(stockValue))
             if userStocks is None:
                 userStocks = 0
+            await ctx.send(str(userStocks))
             valueOwned = userStocks * stockValue
+            await ctx.send(str(valueOwned))
             portfolioMessage += " ($" + str(valueOwned) + ")"
     portfolioMessage += "```"
     await ctx.send(portfolioMessage)
