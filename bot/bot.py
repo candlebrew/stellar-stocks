@@ -388,10 +388,11 @@ async def portfolio(ctx):
     stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
     for stockID in stocksList:
         lowerID = stockID.lower()
-        try:
-            lowerID.replace(".", "")
-        except:
-            pass
+        lowerID.replace(".", "")
+        #try:
+            #lowerID.replace(".", "")
+        #except:
+            #pass
         portfolioMessage += "\n"
         stockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',stockID)
         portfolioMessage += stockName
