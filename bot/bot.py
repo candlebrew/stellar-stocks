@@ -194,7 +194,6 @@ async def run():
     if checkDevPortfolio is None:
         await db.execute('''
         INSERT INTO portfolios VALUES ($1,1000000000,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)''',devID)
-    checkStock =
 
 ## Bot Setup ----------------------------------------------------------
 #TODO token id
