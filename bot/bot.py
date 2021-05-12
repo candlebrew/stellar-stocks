@@ -313,7 +313,7 @@ async def stockID(ctx, stockID: str, newID: str):
 @set.command()
 @is_dev()
 async def add_stock_fix(ctx):
-    stockFixList = []
+    stockFixList = ["BLBR","GHWD","MINK","CHUR","CHES","KRYK","MACK","CAES","PETR","MARZ","DWYN","LAWR"]
     for stockID in stockFixList:
         lowerCaseID = stockID.lower()
         playersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
