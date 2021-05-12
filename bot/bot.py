@@ -258,7 +258,7 @@ async def new(ctx):
     
 @new.command()
 @is_dev()
-async def stock(ctx, stockID: str, stockName: str, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int):
+async def stock(ctx, stockID: str, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int, *, stockName: str):
     phaseWeights = []
     phaseWeights.append(slowGrow)
     phaseWeights.append(fastGrow)
