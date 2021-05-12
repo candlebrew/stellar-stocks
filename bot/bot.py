@@ -258,8 +258,19 @@ async def new(ctx):
     
 @new.command()
 @is_dev()
-async def stock(ctx):
-    pass
+async def stock(ctx, stockID: str, stockName: str, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int):
+    phaseWeights = []
+    phaseWeights.append(slowGrow)
+    phaseWeights.append(fastGrow)
+    phaseWeights.append(slowDecay)
+    phaseWeights.append(fastDecay)
+    phaseWeights.append(stable)
+    phaseWeights.append(chaoticGrow)
+    phaseWeights.append(chaoticDecay)
+    phaseWeights.append(chaoticStable)
+    phaseWeights.append(chaos)
+    startPhase = random.choices(stockPhases, weights=phaseWeights,k=1)[1]
+    await db.execute('''INSERT INTO stocks VALUES ($1,$2,10000,$3,$4);''',stockID,stockName,startPhase,phaseWeights)
 
 @test.command()
 @is_dev()
@@ -274,10 +285,6 @@ async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int
     phaseWeights.append(chaoticDecay)
     phaseWeights.append(chaoticStable)
     phaseWeights.append(chaos)
-
-    await ctx.send(phaseWeights)
-    await ctx.send(str(phaseWeights))
-    await ctx.send(type(phaseWeights))
 
 
 ## Bot Setup & Activation ----------------------------------------------------------
