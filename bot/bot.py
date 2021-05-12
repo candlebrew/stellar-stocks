@@ -392,7 +392,7 @@ async def portfolio(ctx):
         stockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',stockID)
         portfolioMessage += stockName
         portfolioMessage += "[" + stockID + "]: "
-        accessText = '''SELECT ''' + lowerID + '''_unlocked FROM portfolios WHERE uid = $1;'''
+        accessText = "SELECT " + lowerID + "_unlocked FROM portfolios WHERE uid = $1;"
         userAccess = await db.fetchval(accessText,user)
         if userAccess == False:
             portfolioMessage += "LOCKED"
