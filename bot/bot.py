@@ -65,7 +65,7 @@ playersSetupSQL = '''
         accessory TEXT,
         badges TEXT[]
         );'''
-employeesSetupSQL = 
+employeesSetupSQL = None
     #'''
     #CREATE TABLE IF NOT EXISTS employees (
         #uid BIGINT,
@@ -80,7 +80,6 @@ employeesSetupSQL =
         #nose TEXT,
        # hair TEXT
        # );'''
-       None
 stocksSetupSQL = '''
     CREATE TABLE IF NOT EXISTS stocks (
         id TEXT,
