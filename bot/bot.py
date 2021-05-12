@@ -408,9 +408,9 @@ async def portfolio(ctx):
             if userStocks == 0:
                 pass
             else:
-                portfolioMessage += "\n**"
+                portfolioMessage += "\n*"
                 portfolioMessage += stockName
-                portfolioMessage += " [" + stockID + "]:** "
+                portfolioMessage += " [" + stockID + "]:* "
                 portfolioMessage += "$" + str(valueOwned) + " | "
                 portfolioMessage += str(userStocks)
                 stockCounter += 1
