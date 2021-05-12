@@ -321,7 +321,10 @@ async def add_stock_fix(ctx):
         portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
         portfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked = true WHERE uid = ''' + str(devID) + ''';'''
         await db.execute(playersText)
-        await db.execute(portfoliosUnlockText)
+        try:
+            await db.execute(portfoliosUnlockText)
+        except:
+            pass
         await db.execute(portfoliosStocksText)
         await db.execute(portfoliosText)
     await ctx.send("All done!")
