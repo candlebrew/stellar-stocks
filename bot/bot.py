@@ -556,8 +556,8 @@ async def start(ctx):
     if currentUser != None:
         await ctx.send("You are already registered!")
     else:
-        await db.execute('''INSERT INTO players (uid) VALUES ($1);''',uid)
-        await db.execute('''INSERT INTO portfolios (uid, money) VALUES ($1,0);''')
+        await db.execute('''INSERT INTO players (uid) VALUES ($1);''',userID)
+        await db.execute('''INSERT INTO portfolios (uid, money) VALUES ($1,0);''',userID)
         await ctx.send("You are signed up with the Stellar Stocks trading network. Please use `ss.species` to view the list of species, then use `ss.species set <species>` to set the species you are.")
     
 
