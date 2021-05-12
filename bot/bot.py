@@ -275,22 +275,28 @@ async def stock(ctx, stockID: str, slowGrow: int, fastGrow: int, slowDecay: int,
     playersText = '''ALTER TABLE players ADD COLUMN e_''' + lowerCaseID + ''' BOOL DEFAULT false;'''
     portfoliosUnlockText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_unlocked BOOL DEFAULT false;'''
     portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
+    devPlayersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
+    devPortfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked true WHERE uid = ''' + str(devID) + ''';'''
     await db.execute(playersText)
-    await ctx.send("Added " + stockName + " (" + stockID + ") to database successfully.")
+    await db.execute(portfoliosUnlockText)
+    await db.execute(portfoliosStocksText)
+    await db.execute(devPlayersText)
+    await db.execute(devPortfoliosText)
+    await ctx.send("Added " + stockName + " (" + stockID + ") to database successfully.")   
 
-@test.command()
-@is_dev()
-async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int):
-    phaseWeights = []
-    phaseWeights.append(slowGrow)
-    phaseWeights.append(fastGrow)
-    phaseWeights.append(slowDecay)
-    phaseWeights.append(fastDecay)
-    phaseWeights.append(stable)
-    phaseWeights.append(chaoticGrow)
-    phaseWeights.append(chaoticDecay)
-    phaseWeights.append(chaoticStable)
-    phaseWeights.append(chaos)
+#@test.command()
+#@is_dev()
+#async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int):
+    #phaseWeights = []
+    #phaseWeights.append(slowGrow)
+    #phaseWeights.append(fastGrow)
+    #phaseWeights.append(slowDecay)
+    #phaseWeights.append(fastDecay)
+    #phaseWeights.append(stable)
+    #phaseWeights.append(chaoticGrow)
+    #phaseWeights.append(chaoticDecay)
+    #phaseWeights.append(chaoticStable)
+    #phaseWeights.append(chaos)
 
 @set.command()
 @is_dev()
@@ -304,16 +310,33 @@ async def stockID(ctx, stockID: str, newID: str):
     await db.execute('''UPDATE stocks SET id = $1 WHERE id = $2;''',newID,stockID)
     await ctx.send(stockID + " has been set to " + newID)
     
+@set.command()
+@is_dev()
+async def add_stock_fix(ctx):
+    stockFixList = []
+    for stockID in stockFixList:
+        lowerCaseID = stockID.lower()
+        playersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
+        portfoliosUnlockText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_unlocked BOOL DEFAULT false;'''
+        portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
+        portfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked true WHERE uid = ''' + str(devID) + ''';'''
+        await db.execute(playersText)
+        await db.execute(portfoliosUnlockText)
+        await db.execute(portfoliosStocksText)
+        await db.execute(portfoliosText)
+    await ctx.send("All done!")
+    
+    
 @dev.group()
 async def delete(ctx):
     pass
 
-@delete.command()
-@is_dev()
-async def table_reset(ctx):
-    await db.execute('''DROP TABLE players;''')
-    await db.execute('''DROP TABLE portfolios;''')
-    await ctx.send("Fix complete.")
+#@delete.command()
+#@is_dev()
+#async def table_reset(ctx):
+    #await db.execute('''DROP TABLE players;''')
+    #await db.execute('''DROP TABLE portfolios;''')
+    #await ctx.send("Fix complete.")
 
 ## Bot Setup & Activation ----------------------------------------------------------
 asyncio.get_event_loop().run_until_complete(run())
