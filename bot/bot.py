@@ -289,7 +289,7 @@ async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int
 
 @set.command()
 @is_dev()
-async def stockname(ctx, stockID: str, newName: str):
+async def stockname(ctx, stockID: str, *, newName: str):
     await db.execute('''UPDATE stocks SET name = $1 WHERE id = $2;''',newName,stockID)
     await ctx.send(stockID + " has been set to " + newName)
     
