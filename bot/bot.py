@@ -65,7 +65,8 @@ playersSetupSQL = '''
         accessory TEXT,
         badges TEXT[]
         );'''
-#employeesSetupSQL = '''
+employeesSetupSQL = 
+    #'''
     #CREATE TABLE IF NOT EXISTS employees (
         #uid BIGINT,
         #id INT,
@@ -79,6 +80,7 @@ playersSetupSQL = '''
         #nose TEXT,
        # hair TEXT
        # );'''
+       None
 stocksSetupSQL = '''
     CREATE TABLE IF NOT EXISTS stocks (
         id TEXT,
@@ -169,6 +171,8 @@ newsSetupSQL = '''
         effect TEXT,
         stock TEXT
         );'''
+stocksMasterSQL = '''
+    INSERT INTO stocks (id,value,phase_weights) VALUES ('00MASTER00',$1,$2);'''
 
 ## Connecting the DB ----------------------------------------------------------
 # TODO db loop
@@ -194,11 +198,65 @@ async def run():
     if checkDevPortfolio is None:
         await db.execute('''
         INSERT INTO portfolios VALUES ($1,1000000000,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)''',devID)
+    checkMasterStocks = await db.fetchval('''SELECT id FROM stocks WHERE id = '00MASTER00';''')
+    if checkMasterStocks is None:
+        currentStocks = [
+            "KF.E",
+            "ECC.E",
+            "CW.E",
+            "DF.E",
+            "IF.E",
+            "MM.E",
+            "RF.E",
+            "LF.E",
+            "HL.E",
+            "FREY",
+            "STAR",
+            "PEON",
+            "BRUT",
+            "BREW",
+            "VION",
+            "CENZ",
+            "LELI",
+            "AARO",
+            "FARM",
+            "MOTH",
+            "TORI",
+            "CLEM",
+            "LACH",
+            "KRAB",
+            "HORS",
+            "CHAS",
+            "TORR",
+            "CHOE",
+            "MICH",
+            "AURE",
+            "GRAV",
+            "LIZB",
+            "RUNE",
+            "LEVY",
+            "HAWK",
+            "BLBR",
+            "GHWD",
+            "MINK",
+            "CHUR",
+            "CHES",
+            "KRYK",
+            "MACK",
+            "CAES",
+            "PETR",
+            "MARZ",
+            "LAWR",
+            "DWYN"
+            ]
+        now = datetime.datetime.now()
+        await db.execute(stocksMasterSQL,now.hour,currentStocks)
 
 ## Bot Setup ----------------------------------------------------------
 #TODO token id
 token = os.environ.get('DISCORD_BOT_TOKEN')
 devID = int(os.environ.get('DEV_ID'))
+stockChannelID = int(os.environ.get('STOCK_LOGS_CHANNEL'))
 client = discord.Client()
 
 bot = commands.Bot(command_prefix='ss.', db=db)
@@ -228,6 +286,22 @@ stockPatterns = [
     "big decrease",
     "huge decrease"
 ]
+
+## Automatic Actions -------------------------------------
+
+@bot.event
+async def on_ready():
+    bot.loop.create_task(stocks_task())
+
+async def stocks_task():
+    await asyncio.sleep(10)
+    while True:
+        stocksChannel = bot.get_channel(stockChannelID)
+        now = datetime.datetime.now()
+        if now.minute == 0:
+            
+        await asyncio.sleep(30)
+
 
 ## Commands ----------------------------------------------------------
 
@@ -284,9 +358,9 @@ async def stock(ctx, stockID: str, slowGrow: int, fastGrow: int, slowDecay: int,
     await db.execute(devPortfoliosText)
     await ctx.send("Added " + stockName + " (" + stockID + ") to database successfully.")   
 
-#@test.command()
-#@is_dev()
-#async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int):
+@test.command()
+@is_dev()
+async def list(ctx, slowGrow: int, fastGrow: int, slowDecay: int, fastDecay: int, stable: int, chaoticGrow: int, chaoticDecay: int, chaoticStable: int, chaos: int):
     #phaseWeights = []
     #phaseWeights.append(slowGrow)
     #phaseWeights.append(fastGrow)
@@ -297,6 +371,7 @@ async def stock(ctx, stockID: str, slowGrow: int, fastGrow: int, slowDecay: int,
     #phaseWeights.append(chaoticDecay)
     #phaseWeights.append(chaoticStable)
     #phaseWeights.append(chaos)
+    pass
 
 @set.command()
 @is_dev()
@@ -313,24 +388,25 @@ async def stockID(ctx, stockID: str, newID: str):
 @set.command()
 @is_dev()
 async def add_stock_fix(ctx):
-    stockFixList = ["BLBR","GHWD","MINK","CHUR","CHES","KRYK","MACK","CAES","PETR","MARZ","DWYN","LAWR"]
-    for stockID in stockFixList:
-        lowerCaseID = stockID.lower()
-        playersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
-        portfoliosUnlockText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_unlocked BOOL DEFAULT false;'''
-        portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
-        portfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked = true WHERE uid = ''' + str(devID) + ''';'''
-        await db.execute(playersText)
-        try:
-            await db.execute(portfoliosUnlockText)
-        except:
-            pass
-        try:
-            await db.execute(portfoliosStocksText)
-        except:
-            pass
-        await db.execute(portfoliosText)
-    await ctx.send("All done!")
+#    stockFixList = ["BLBR","GHWD","MINK","CHUR","CHES","KRYK","MACK","CAES","PETR","MARZ","DWYN","LAWR"]
+#    for stockID in stockFixList:
+#        lowerCaseID = stockID.lower()
+#        playersText = '''UPDATE players SET e_''' + lowerCaseID + ''' = true WHERE uid = ''' + str(devID) + ''';'''
+#        portfoliosUnlockText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_unlocked BOOL DEFAULT false;'''
+#        portfoliosStocksText = '''ALTER TABLE portfolios ADD COLUMN ''' + lowerCaseID + '''_stocks BIGINT DEFAULT 0;'''
+#        portfoliosText = '''UPDATE portfolios SET ''' + lowerCaseID + '''_unlocked = true WHERE uid = ''' + str(devID) + ''';'''
+#        await db.execute(playersText)
+#        try:
+#            await db.execute(portfoliosUnlockText)
+#        except:
+#            pass
+#        try:
+#            await db.execute(portfoliosStocksText)
+#        except:
+#            pass
+#        await db.execute(portfoliosText)
+#    await ctx.send("All done!")
+    pass
     
     
 @dev.group()
