@@ -370,10 +370,122 @@ async def stocks_task():
 
 
 ## Commands ----------------------------------------------------------
+@bot.command(aliases=["c"])
+async def calculate(ctx, stockID: str, numberStocks: int):
+    stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
+    if stockValue is None:
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+    else:
+        cost = stockValue * numberStocks
+        await ctx.send("The value of " + str(numberStocks) + " of " + stockID + " would be **$" + cost + "**")
 
+@bot.command(aliases=["p"])
+async def portfolio(ctx):
+    user = ctx.message.author.id
+    name = user.name
+    userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
+    portfolioMessage = "```" + name + "'s Portfolio:"
+    stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
+    for stockID in stocksList:
+        lowerID = stockID.lower()
+        portfolioMessage += "\n"
+        stockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',lowerID)
+        portfolioMessage += stockName
+        portfolioMessage += "[" + stockID + "]: "
+        accessText = '''SELECT ''' + lowerID + '''_unlocked FROM portfolios WHERE uid = $1;'''
+        userAccess = await db.fetchval(accessText,user)
+        if userAccess == False:
+            portfolioMessage += "LOCKED"
+        else:
+            stocksText = '''SELECT ''' + lowerID + '''_stocks FROM portfolios WHERE uid = $1;'''
+            userStocks = await db.fetchval(stocksText,user)
+            portfolioMessage += str(userStocks)
+            stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',lowerID)
+            valueOwned = userStocks * stockValue
+            portfolioMessage += " ($" + str(valueOwned) + ")"
+    portfolioMessage += "```"
+    await ctx.send(portfolioMessage)
+            
+            
+    
+@bot.command(aliases=["prices"])
+async def stocks(ctx):
+    pricesChannel = bot.get_channel(pricesChannelID)
+    pricesMessage = await pricesChannel.fetch_message(stockPrices)
+    await ctx.send(pricesMessage.content)
 
+@bot.command(aliases=["b"])
+async def buy(ctx, stockID: str, numberStocks: int):
+    user = ctx.message.author.id
+    stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
+    lowercaseID = stockID.lower()
+    userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
+    accessText = '''SELECT ''' + lowercaseID + '''_unlocked FROM portfolios WHERE uid = $1;'''
+    userAccess = await db.fetchval(accessText,user)
+    stocksText = '''SELECT ''' + lowercaseID + '''_stocks FROM portfolios WHERE uid = $1;'''
+    userStocks = await db.fetchval(stocksText,user)
+    if stockValue is None:
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+    elif userAccess == False:
+        await ctx.send("Sorry, you do not have access to " + stockID + ". Purchase access with `ss.unlock " + stockID + "` for $10,000.")
+    else:
+        cost = stockValue * numberStocks
+        if userMoney < cost:
+            await ctx.send("You cannot afford to purchase " + str(numberStocks) + " of " + stockID + " (value of " + str(cost) + ")")
+        else:
+            userMoney -= cost
+            userStocks += numberStocks
+            updateStocksText = '''UPDATE portfolios SET ''' + stockID + '''_stocks = $1 WHERE uid = $2'''
+            await db.execute(updateStocksText,userStocks,user)
+            await db.execute('''UPDATE portfolios SET money = $1 WHERE uid = $2''',userMoney,user)
+            await ctx.send("You have purchased " + str(numberStocks) + " for $" + str(cost) + ". \nCurrent money: " + str(userMoney) + "\nCurrent number of " + stockID + " stocks: " + str(userStocks))
+        
+@bot.command(aliases=["s"])
+async def sell(ctx, stockID: str, numberStocks: int):
+    user = ctx.message.author.id
+    stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
+    lowercaseID = stockID.lower()
+    userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
+    accessText = '''SELECT ''' + lowercaseID + '''_unlocked FROM portfolios WHERE uid = $1;'''
+    userAccess = await db.fetchval(accessText,user)
+    stocksText = '''SELECT ''' + lowercaseID + '''_stocks FROM portfolios WHERE uid = $1;'''
+    userStocks = await db.fetchval(stocksText,user)
+    if stockValue is None:
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+    elif userAccess == False:
+        await ctx.send("Sorry, you do not have access to " + stockID + ". Purchase access with `ss.unlock " + stockID + "` for $10,000.")
+    else:
+        cost = stockValue * numberStocks
+        if userStocks < numberStocks:
+            await ctx.send("You do not have " + str(numberStocks) + " of " + stockID + " stocks. Current amount of stocks held: " + str(userStocks))
+        else:
+            userMoney += cost
+            userStocks -= numberStocks
+            updateStocksText = '''UPDATE portfolios SET ''' + stockID + '''_stocks = $1 WHERE uid = $2'''
+            await db.execute(updateStocksText,userStocks,user)
+            await db.execute('''UPDATE portfolios SET money = $1 WHERE uid = $2''',userMoney,user)
+            await ctx.send("You have sold " + str(numberStocks) + " for $" + str(cost) + ". \nCurrent money: " + str(userMoney) + "\nCurrent number of " + stockID + " stocks: " + str(userStocks))
 
-
+@bot.command()
+async def unlock(ctx, stockID: str):
+    user = ctx.message.author.id
+    accessText = '''SELECT ''' + lowercaseID + '''_unlocked FROM portfolios WHERE uid = $1;'''
+    userAccess = await db.fetchval(accessText,user)
+    userMoney = await db.fetchval('''SELECT money FROM portfolios WHERE uid = $1;''',user)
+    stockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
+    if stockValue is None:
+        await ctx.send("Sorry, I could not find stock with the ID \"" + stockID + "\""
+    elif userAccess == True:
+        await ctx.send("You already have access to " + stockID)
+    elif userMoney < 10000:
+        await ctx.send("You do not have enough money to purchase access. Access costs $10,000.")
+    else:
+        userMoney -= 10000
+        await db.execute('''UPDATE portfolios SET money = $1 WHERE uid = $2''',userMoney,user)
+        updateStocksText = '''UPDATE portfolios SET ''' + stockID + '''_unlocked = true WHERE uid = $1'''
+        await db.execute(updateStocksText,user)
+        await ctx.send("Congratulations! You now have access to " + stockID)
+    
 
 ## Dev Commands ------------------------------------------------------
 @bot.group()
