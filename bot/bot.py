@@ -335,23 +335,23 @@ async def stocks_task():
                     await db.execute('''UPDATE stocks SET pattern = $1 WHERE id = $2;''',pattern,stockID)
                 currentPattern = await db.fetchval('''SELECT pattern FROM stocks WHERE id = $1;''',stockID)
                 if currentPattern in ["huge increase","huge decrease"]:
-                    changeMin = 1000
-                    changeMax = 10000
-                elif currentPattern in ["big increase","big decrease"]:
-                    changeMin = 500
-                    changeMax = 1000
-                elif currentPattern in ["small increase","small decrease"]:
                     changeMin = 100
-                    changeMax = 500
+                    changeMax = 1000
+                elif currentPattern in ["big increase","big decrease"]:
+                    changeMin = 50
+                    changeMax = 100
+                elif currentPattern in ["small increase","small decrease"]:
+                    changeMin = 10
+                    changeMax = 50
                 elif currentPattern == "no change":
                     changeMin = 0
-                    changeMax = 200
+                    changeMax = 20
                 changeValue = random.randint(changeMin, changeMax)
                 if currentPattern in ["huge decrease","big decrease","small decrease"]:
                     changeValue *= -1
                 elif currentPattern == "no change":
-                    if changeValue > 100:
-                        changeValue -= 100
+                    if changeValue > 10:
+                        changeValue -= 10
                         changeValue *= -1
                 currentStockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
                 newValue = currentStockValue + changeValue
