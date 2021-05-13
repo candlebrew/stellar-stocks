@@ -581,6 +581,14 @@ async def test(ctx):
 @dev.group()
 async def new(ctx):
     pass
+
+@dev.command()
+@is_dev()
+async def stimulus(ctx, stockID: str, increase: int):
+    currentValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''', stockID)
+    newValue = currentValue + increase
+    await db.execute('''UPDATE stocks SET value = $1 WHERE id = $2;''',newValue,stockID)
+    await ctx.send("Task complete.")
     
 @new.command()
 @is_dev()
