@@ -306,7 +306,7 @@ async def update_stock_message():
     for stockID in stocksList:
         currentStockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
         currentStockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',stockID)
-        channelMessage += "[" + stockID + "] " + currentStockName + ": " + str(currentStockValue) + "\n"
+        channelMessage += "[" + stockID + "] " + currentStockName + ": $" + str(currentStockValue) + "\n"
     channelMessage = "```Current Stock Prices:\n" + channelMessage + "```"
     pricesMessage = await pricesChannel.fetch_message(stockPrices)
     await pricesMessage.edit(content=channelMessage)
