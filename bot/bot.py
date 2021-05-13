@@ -308,7 +308,7 @@ async def stocks_task():
         pricesChannel = bot.get_channel(pricesChannelID)
         now = datetime.datetime.now()
         storedHour = await db.fetchval('''SELECT hour FROM time_master WHERE id = '00MASTER00';''')
-        if now.hour != storedHour):
+        if now.hour != storedHour:
             stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
             for stockID in stocksList:
                 if now.hour == 5:
