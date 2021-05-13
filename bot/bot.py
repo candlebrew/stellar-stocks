@@ -298,14 +298,24 @@ stockPatterns = [
 @bot.event
 async def on_ready():
     bot.loop.create_task(stocks_task())
+    
+async def update_stock_message():
+    pricesChannel = bot.get_channel(pricesChannelID)
+    channelMessage = ""
+    stocksList = await db.fetchval('''SELECT stocks FROM time_master WHERE id = '00MASTER00';''')
+    for stockID in stocksList:
+        currentStockValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''',stockID)
+        currentStockName = await db.fetchval('''SELECT name FROM stocks WHERE id = $1;''',stockID)
+        channelMessage += "[" stockID + "] " + currentStockName + ": " + str(currentStockValue) + "\n"
+    channelMessage = "```Current Stock Prices:\n" + channelMessage + "```"
+    pricesMessage = await pricesChannel.fetch_message(stockPrices)
+    await pricesMessage.edit(content=channelMessage)
 
 async def stocks_task():
     await asyncio.sleep(10)
     while True:
         logMessage = ""
-        channelMessage = ""
         stocksChannel = bot.get_channel(stockChannelID)
-        pricesChannel = bot.get_channel(pricesChannelID)
         now = datetime.datetime.now()
         storedHour = await db.fetchval('''SELECT hour FROM time_master WHERE id = '00MASTER00';''')
         if now.hour != storedHour:
@@ -359,13 +369,10 @@ async def stocks_task():
                     newValue = 1
                 await db.execute('''UPDATE stocks SET value = $1 WHERE id = $2;''',newValue,stockID)
                 logMessage += stockID + " " + str(currentStockValue) + " >>> " + str(newValue) + "\n"
-                channelMessage += stockID + ": " + str(newValue) + "\n"
             await db.execute('''UPDATE time_master SET hour = $1 WHERE id = '00MASTER00';''',now.hour)
             logMessage = "``` ```" + logMessage
             await stocksChannel.send(logMessage)
-            channelMessage = "```" + channelMessage + "```"
-            pricesMessage = await pricesChannel.fetch_message(stockPrices)
-            await pricesMessage.edit(content=channelMessage)
+            await update_stock_message()
         await asyncio.sleep(30)
 
 
@@ -585,9 +592,14 @@ async def new(ctx):
 @dev.command()
 @is_dev()
 async def stimulus(ctx, stockID: str, increase: int):
+    stocksChannel = bot.get_channel(stockChannelID)
     currentValue = await db.fetchval('''SELECT value FROM stocks WHERE id = $1;''', stockID)
     newValue = currentValue + increase
     await db.execute('''UPDATE stocks SET value = $1 WHERE id = $2;''',newValue,stockID)
+    await update_stock_message()
+    logMessage = stockID + " stimulus: " + str(increase)
+    logMessage = "``` ```" + logMessage
+    await stocksChannel.send(logMessage)
     await ctx.send("Task complete.")
     
 @new.command()
