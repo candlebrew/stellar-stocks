@@ -1,7 +1,3 @@
-# FIX ON UPLOAD:
-# DB loop: line
-# Token ID: line
-# Start async loop: line
 import discord
 from discord.ext import commands
 import random
@@ -257,7 +253,6 @@ async def run():
         await db.execute('''INSERT INTO time_master VALUES ('00MASTER00',$1,$2);''',now.hour,currentStocks)
 
 ## Bot Setup ----------------------------------------------------------
-#TODO token id
 token = os.environ.get('DISCORD_BOT_TOKEN')
 devID = int(os.environ.get('DEV_ID'))
 stockPrices = int(os.environ.get('STOCK_PRICES_MESSAGE'))
