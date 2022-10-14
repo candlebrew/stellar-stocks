@@ -7,8 +7,6 @@ import asyncio
 import asyncpg
 import datetime
 
-# placeholder: ODQxMDMyNTgzNjg4ODgwMTM4.GCLm8m.yoZatAZ4tv0rn53F_f8Vbs3BQzuxfFm3ny_8MU
-
 # https://discord.com/api/oauth2/authorize?client_id=841032583688880138&permissions=126016&scope=bot
 
 db = None
